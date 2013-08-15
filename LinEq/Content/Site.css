@@ -1,0 +1,154 @@
+﻿body {
+    font-size: .85em;
+    font-family: "Segoe UI", Verdana, Helvetica, Sans-Serif;
+    color: #232323;
+    background-color: #fff;
+}
+
+header, footer, nav, section {
+    display: block;
+}
+
+
+/* Styles for basic forms
+-----------------------------------------------------------*/
+fieldset {
+    border: 1px solid #ddd;
+    padding: 0 1.4em 1.4em 1.4em;
+    margin: 0 0 1.5em 0;
+}
+
+legend {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+textarea {
+    min-height: 75px;
+}
+
+.editor-label {
+    margin: 1em 0 0 0;
+}
+
+.editor-field {
+    margin: 0.5em 0 0 0;
+}
+
+
+/* Styles for validation helpers
+-----------------------------------------------------------*/
+.field-validation-error {
+    color: #f00;
+}
+
+.field-validation-valid {
+    display: none;
+}
+
+.input-validation-error {
+    border: 1px solid #f00;
+    background-color: #fee;
+}
+
+.validation-summary-errors {
+    font-weight: bold;
+    color: #f00;
+}
+
+.validation-summary-valid {
+    display: none;
+}
+
+/* added css */
+input {
+    width: 30px;
+    text-align: center;
+}
+
+    input.error {
+        border: 1px solid red;
+    }
+
+body {
+    font-size: 62.5%;
+    font-family: 'Lucida Grande',Verdana,Arial,Sans-Serif;
+    color: #333;
+    text-align: center;
+    margin: 0 0 20px 0;
+    padding: 0;
+}
+
+#page {
+    border: 1px solid #959596;
+    text-align: left;
+    background-color: white;
+    margin: 20px auto;
+    padding: 0;
+    width: 760px;
+    border: 1px solid #959596;
+}
+
+#content {
+    font-size: 1.2em;
+}
+
+h1 {
+    font-family: 'Trebuchet MS','Lucida Grande',Verdana,Arial,Sans-Serif;
+    font-weight: bold;
+    font-size: 4em;
+    text-align: center;
+    padding-top: 25px;
+    margin: 0;
+}
+
+h1, h1 a, h1 a:hover, h1 a:visited {
+    text-decoration: none;
+    color: white;
+}
+
+#header {
+    background-color: #73a0c5;
+    margin: 0 0 0 1px;
+    padding: 0;
+    height: 100px;
+    width: 758px;
+}
+
+.narrowcolumn {
+    float: left;
+    padding: 20px 0 20px 45px;
+    margin: 0;
+    width: 760px;
+}
+
+#footer {
+    padding: 0;
+    margin: 0 auto;
+    width: 760px;
+    clear: both;
+    background-color: #e7e7e7;
+    border: none;
+}
+
+    #footer p {
+        margin: 0;
+        padding: 20px 0;
+        text-align: center;
+    }
+
+hr {
+    display: none;
+}
+
+#equationsBlock {
+    padding: 20px 0 10px 0;
+}
+
+#equationsCount, #coefficientsCount {
+    width: 40px;
+}
+
+#solveBlock {
+    padding-top: 20px;
+}

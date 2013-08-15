@@ -1,0 +1,110 @@
+﻿<html>
+<head>
+    <title>@ViewBag.Title</title>
+    <meta charset="UTF-8">
+    <script src="@Url.Content("/Scripts/jquery-1.8.2.js")"></script>
+    <script src="@Url.Content("/Scripts/jquery.unobtrusive-ajax.min.js")"></script>
+    <link rel="stylesheet" href="@Url.Content("/Content/Site.css")" type="text/css">
+</head>
+<body>
+    <div id="page">
+        <div id="header">
+            <h1>Linear System Solver</h1>
+        </div>
+        <div id="content" class="narrowcolumn">
+            Equations count: <input id="equationsCount" type="number" min="1" max="9" value="3">
+            <button id="buildButton">OK</button><br />
+            <div id="equationsBlock"></div>
+            <button id="solveButton">Solve</button>
+            <div id="solveBlock"></div>
+        </div>
+        <hr>
+        <div id="footer" role="contentinfo">
+            <p><a href="https://github.com/Aristokrat/lineq">Project on Github</a></p>
+        </div>
+    </div>
+    <div id="content">
+        
+    </div>
+    <script>
+        function buildEquationBlock(equationsCount) {
+            $('#equationsBlock').empty();
+            $('#solveBlock').empty();
+            for (var i = 0; i < equationsCount; i++) {
+                var equationHtml = '';
+                equationHtml += '<span class="equation" data-value="' + i + '">';
+
+                for (var j = 0; j < equationsCount; j++) {
+                    if (j > 0)
+                        equationHtml += ' + ';
+
+                    equationHtml += '<input type="text" size="1" value="0"> <b>x' + (j + 1) + '</b>';
+                }
+                equationHtml += ' = <input type="text" size="1" value="0"></span><br />';
+                $('#equationsBlock').append(equationHtml);
+            }
+        }
+
+        function checkEquationsInputs() {
+            var checkedResult = true;
+            $('#equationsBlock input').removeClass('error');
+            $('#equationsBlock input').each(function () {
+                var value = $(this).val();
+                if (isNaN(value) || $.trim(value) == '') {
+                    $(this).addClass('error');
+                    checkedResult = false;
+                }
+            });
+            return checkedResult;
+        }
+
+        if (!String.prototype.trim) {
+            String.prototype.trim = function () { return this.replace(/^\s+|\s+$/g, ''); };
+        }
+        
+        $(document).ready(function () {
+            buildEquationBlock(3, 3);
+            $('#buildButton').click(function () {
+                var eqCount = parseInt($('#equationsCount').val());
+                buildEquationBlock(eqCount);
+            });
+
+            $('#solveButton').click(function () {
+                if (!checkEquationsInputs())
+                    return false;
+
+                var equations = [];
+                $('#content .equation').each(function () {
+                    var equationIndex = $(this).data("value");
+                    var coeffs = getEquationCoeffs(equationIndex);
+
+                    equations.push(coeffs.join(","));
+                });
+
+                function getEquationCoeffs(equationIndex) {
+                    var result = [];
+                    $('.equation[data-value="' + equationIndex + '"] input').each(function (i, elem) {
+                        result.push(parseFloat($(this).val()));
+                    });
+                    return result;
+                }
+
+                $.post('@Url.Action("Solve")', { "equations": equations.join("|") }, function (data) {
+                    if (data.length == 0) {
+                        $('#solveBlock').html("This system has no unique solution");
+                    }
+                    else {
+                        $('#solveBlock').html("Solution: <br />");
+                        for (var i = 1; i <= data.length; i++)
+                            $('#solveBlock').append('x' + i + ' = ' + data[i-1] + '<br />');
+                    }
+                }, 'json');
+            });
+
+            $('#equationsCount').keydown(function () {
+                return false;
+            });
+        });
+    </script>
+</body>
+</html>
