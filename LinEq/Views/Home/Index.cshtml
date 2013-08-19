@@ -12,9 +12,7 @@
             <h1>Linear System Solver</h1>
         </div>
         <div id="content" class="narrowcolumn">
-            Equations count: <input id="equationsCount" type="number" min="1" max="9" value="3">
-            <button id="buildButton">OK</button><br />
-            <div id="equationsBlock"></div>
+            <textarea rows="10" cols="50" id="equationsText"></textarea><br />
             <button id="solveButton">Solve</button>
             <div id="solveBlock"></div>
         </div>
@@ -27,84 +25,107 @@
         
     </div>
     <script>
-        function buildEquationBlock(equationsCount) {
-            $('#equationsBlock').empty();
-            $('#solveBlock').empty();
-            for (var i = 0; i < equationsCount; i++) {
-                var equationHtml = '';
-                equationHtml += '<span class="equation" data-value="' + i + '">';
-
-                for (var j = 0; j < equationsCount; j++) {
-                    if (j > 0)
-                        equationHtml += ' + ';
-
-                    equationHtml += '<input type="text" size="1" value="0"> <b>x' + (j + 1) + '</b>';
-                }
-                equationHtml += ' = <input type="text" size="1" value="0"></span><br />';
-                $('#equationsBlock').append(equationHtml);
+        function removeZeroCols(matrix, rows, cols) {
+            var tmpMatrix = [];
+            for (var k = 0; k < rows; k++) {
+                tmpMatrix[k] = [];
             }
-        }
 
-        function checkEquationsInputs() {
-            var checkedResult = true;
-            $('#equationsBlock input').removeClass('error');
-            $('#equationsBlock input').each(function () {
-                var value = $(this).val();
-                if (isNaN(value) || $.trim(value) == '') {
-                    $(this).addClass('error');
-                    checkedResult = false;
+            var tmpMatrixColsCount = 0;
+            for (var i = 0; i < cols; i++) {
+                var isEmptyCol = true;
+                for (var j = 0; j < rows; j++) {
+                    if (matrix[j][i] != 0) {
+                        isEmptyCol = false;
+                        break;
+                    }
                 }
-            });
-            return checkedResult;
+                if (!isEmptyCol) {
+                    for (var l = 0; l < rows; l++) {
+                        tmpMatrix[l][tmpMatrixColsCount] = matrix[l][i];
+                    }
+                    tmpMatrixColsCount++;
+                }
+            }
+            return tmpMatrix;
         }
 
-        if (!String.prototype.trim) {
-            String.prototype.trim = function () { return this.replace(/^\s+|\s+$/g, ''); };
-        }
-        
         $(document).ready(function () {
-            buildEquationBlock(3, 3);
-            $('#buildButton').click(function () {
-                var eqCount = parseInt($('#equationsCount').val());
-                buildEquationBlock(eqCount);
-            });
+            $('#equationsText').val("9x1 + 4x4=7\n4*x2+4*x3=8\nx1+x3 = 3\nx1+x4 = 3");
 
             $('#solveButton').click(function () {
-                if (!checkEquationsInputs())
-                    return false;
+                var rawIncomingText = $('#equationsText').val();
+                var rawEquations = rawIncomingText.split('\n');
 
-                var equations = [];
-                $('#content .equation').each(function () {
-                    var equationIndex = $(this).data("value");
-                    var coeffs = getEquationCoeffs(equationIndex);
+                var matrix = [];
+                var freeMembers = [];
+                var cols = 0;
+                var rows = rawEquations.length;
+                for (var i = 0; i < rows; i++) {
+                    matrix[i] = [];
+                    
+                    var rawEq = rawEquations[i];
+                    var eqParts = rawEq.split('=');
+                    var leftPart = eqParts[0];
+                    var rightPart = parseFloat(eqParts[1]);
 
-                    equations.push(coeffs.join(","));
-                });
+                    freeMembers[i] = rightPart;
+                    leftPart = leftPart.replace(/-/gi, "+-");
+                    var augends = leftPart.split(/\+/);
 
-                function getEquationCoeffs(equationIndex) {
-                    var result = [];
-                    $('.equation[data-value="' + equationIndex + '"] input').each(function (i, elem) {
-                        result.push(parseFloat($(this).val()));
-                    });
-                    return result;
+                    for (var j = 0; j < augends.length; j++) {
+                        var augend = $.trim(augends[j]);
+                        var augendParts = augend.split('x');
+                        var number = (augendParts[0] !== '') ? parseFloat(augendParts[0]) : 1;
+                        var index = augendParts[1];
+                        
+                        if (parseInt(index) > cols)
+                            cols = parseInt(index);
+
+                        matrix[i][index - 1] = number;
+                    }
                 }
 
-                $.post('@Url.Action("Solve")', { "equations": equations.join("|") }, function (data) {
-                    if (data.length == 0) {
-                        $('#solveBlock').html("This system has no unique solution");
+                for (var i = 0; i < rows; i++) {
+                    for (var j = 0; j < cols; j++) {
+                        if (matrix[i][j] == undefined)
+                            matrix[i][j] = 0;
                     }
-                    else {
-                        $('#solveBlock').html("Solution: <br />");
-                        for (var i = 1; i <= data.length; i++)
-                            $('#solveBlock').append('x' + i + ' = ' + data[i-1] + '<br />');
-                    }
-                }, 'json');
-            });
+                }
 
-            $('#equationsCount').keydown(function () {
-                return false;
+                matrix = removeZeroCols(matrix, rows, cols);
+
+                for (var i = 0; i < rows; i++) {
+                    matrix[i][matrix[i].length] = freeMembers[i];
+                }
+
+                var equations = [];
+                for (var i = 0; i < matrix.length; i++) {
+                    equations.push(matrix[i].join(","));
+                }
+
+                if (matrix.length != matrix[0].length - 1) {
+                    $('#solveBlock').html("The number of equations must be equal to the number of variables");
+                }
+                else {
+                    $('#solveBlock').html("Please, waiting...");
+                    solveEquations(equations.join("|"));
+                }
             });
         });
+
+        function solveEquations(equations) {
+            $.post('@Url.Action("Solve")', { "equations": equations }, function (data) {
+                if (data.length == 0) {
+                    $('#solveBlock').html("This system has no unique solution");
+                }
+                else {
+                    $('#solveBlock').html("Solution: <br />");
+                    for (var i = 1; i <= data.length; i++)
+                        $('#solveBlock').append('x' + i + ' = ' + data[i - 1] + '<br />');
+                }
+            }, 'json');
+        };
     </script>
 </body>
 </html>
